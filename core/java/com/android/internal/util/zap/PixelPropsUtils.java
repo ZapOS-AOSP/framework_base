@@ -63,6 +63,15 @@ public final class PixelPropsUtils {
         "FINGERPRINT", "google/walleye/walleye:8.1.0/OPM1.171019.011/4448085:user/release-keys"
     );
 
+    private static final Map<String, String> ravenProps = Map.of(
+        "ID", "TQ1A.230205.002",
+        "MODEL", "Pixel 6 Pro",
+        "PRODUCT", "raven",
+        "DEVICE", "raven",
+        "FINGERPRINT", "google/raven/raven:13/TQ1A.230205.002/9471150:user/release-keys",
+        "SECURITY_PATCH", "2023-02-05"
+    );
+
     private static final Map<String, String> redfinProps = Map.of(
         "DEVICE", redfin_device,
         "PRODUCT", redfin_device,
@@ -147,12 +156,17 @@ public final class PixelPropsUtils {
             redfinProps.forEach(PixelPropsUtils::setPropValue);
         } else if (packageName.equals(PACKAGE_GMS)) {
             final String procName = Application.getProcessName();
+            final boolean isUnstable = PROCESS_GMS_UNSTABLE.equals(procName);
+            final boolean isPersistent = !isUnstable && PROCESS_GMS_PERSISTENT.equals(procName);
             // GMS specific spoofing
-            if (!PROCESS_GMS_UNSTABLE.equals(procName) &&
-                !PROCESS_GMS_PERSISTENT.equals(procName))
-                return;
+            if (!isUnstable && !isPersistent) return;
             commonProps.forEach(PixelPropsUtils::setPropValue);
-            walleyeProps.forEach(PixelPropsUtils::setPropValue);
+            if (isUnstable) {
+                walleyeProps.forEach(PixelPropsUtils::setPropValue);
+                return;
+            }
+            // persistent
+            ravenProps.forEach(PixelPropsUtils::setPropValue);
         } else if (packageName.startsWith("com.google.")
                 || extraPackagesToChange.contains(packageName)) {
             if (propsToKeep.containsKey(packageName)
